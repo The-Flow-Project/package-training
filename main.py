@@ -11,5 +11,5 @@ if __name__ == "__main__":
     )
 
     logger.info("-" * 50)
-    logger.info(f"main.py called - hello world!")
+    logger.info("main.py called - hello world!")
     logger.info("-" * 50)
