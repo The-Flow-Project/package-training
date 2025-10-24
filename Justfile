@@ -39,6 +39,6 @@ validate: format lint test
 dockerize:
 	docker build -t python-repo-template .
 
-# Use it like: just run 10
+# Use it like: just run variables
 run number:
-	uv run main.py --number {{number}}
+	uv run main.py

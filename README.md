@@ -1,11 +1,9 @@
-# Python Repository Template
+# package-training
 
-The ultimate 2025 Python repository template. Simple, fast, customizable, and ready to use.
+Python package for TrOCR training
+If you have a line based preprocessed dataset, you can train a handwritten text recognition TrOCR model with this package.
 
----
-I wrote a blog post about this template! Check it out [here](https://giovannigiacometti.github.io/posts/python-template/)
-
-## 🎯 Core Features
+## Template Features
 
 ### Development Tools
 
@@ -21,7 +19,6 @@ I wrote a blog post about this template! Check it out [here](https://giovannigia
 - 🛫 Pre-commit hooks
 - 🐳 Docker support with multi-stage builds and distroless images
 - 🔄 GitHub Actions CI/CD pipeline
-
 
 ## Usage
 
@@ -77,11 +74,10 @@ just validate
 
 ### Executing
 
-The code is a simple hello world example, which just requires a number as input. It will output the sum of the provided number with a random number.
 You can run the code with:
 
 ```bash
-just run 5
+just run
 ```
 
 ### Docker
@@ -94,7 +90,7 @@ just dockerize
 
 ### Github Actions
 
-The template includes two Github Actions workflows.
+There are two Github Actions workflows from the template.
 
 The first one runs tests and linters on every push on the main and dev branches. You can find the workflow file in `.github/workflows/main-list-test.yml`.
 

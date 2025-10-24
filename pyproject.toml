@@ -1,10 +1,30 @@
 [project]
-name = "python-repo-template"
+name = "flow_training"
 version = "0.0.1"
-description = "A template for Python projects"
-readme = "README.md"
+description = "TrOCR Training Package for the Flow Project (flow-project.net)"
+readme = { file = "README.md", content-type = "text/markdown" }
 license = { text = "MIT" }
-authors = [ { name = "Giovanni Giacometti", email = "giovanni.giacometti5@gmail.com" } ]
+authors = [
+    { name = "Dana Rebecca Meyer", email = "dameyer@techfak.uni-bielefeld.de" },
+    { name = "Jonas Widmer", email = "jonas.widmer@unibe.ch" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+keywords = [
+    "flow-project",
+    "preprocessing",
+    "htrflow",
+    "digital-humanities",
+    "htr",
+    "handwritten-text-recognition",
+    "datasets",
+    "huggingface",
+    "nlp",
+    "machine-learning",
+]
+
 requires-python = ">=3.12"
 dependencies = [
     "loguru>=0.7.3",
@@ -17,3 +37,7 @@ dev = [
     "pytest>=8.3.4",
     "ruff>=0.9.5",
 ]
+
+[project.urls]
+Homepage = "https://flow-project.net"
+Repository = "https://github.com/The-Flow-Project/package-training"
