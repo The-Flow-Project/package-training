@@ -26,7 +26,7 @@ format:
 # Run ruff linting and mypy type checking
 lint:
 	uv run ruff check --fix
-	uv run mypy --ignore-missing-imports --install-types --non-interactive --package python_repo_template
+	uv run mypy --ignore-missing-imports --install-types --non-interactive --package flow_training
 
 # Run tests using pytest
 test:
@@ -37,7 +37,7 @@ validate: format lint test
 
 # Build docker image
 dockerize:
-	docker build -t python-repo-template .
+	docker build -t flow-training .
 
 # Use it like: just run variables
 run number:
