@@ -26,8 +26,7 @@ format:
 # Run ruff linting and mypy type checking
 lint:
 	uv run ruff check --fix
-	uv run mypy --ignore-missing-imports --install-types --non-interactive --package flow-training src/
-	uv run mypy --ignore-missing-imports --install-types --non-interactive --package flow-training tests/
+	uv run mypy --ignore-missing-imports --install-types --non-interactive src/ tests/
 
 # Run tests using pytest
 test:
