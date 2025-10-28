@@ -39,6 +39,6 @@ validate: format lint test
 dockerize:
 	docker build -t flow-training .
 
-# Use it like: just run variables
-run number:
-	uv run main.py
+# run some code
+# run:
+#	uv run ...
