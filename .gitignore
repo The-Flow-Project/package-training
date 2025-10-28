@@ -1,4 +1,5 @@
 *.env
+.vscode
 
 # Created by .ignore support plugin (hsz.mobi)
 ### Diff template

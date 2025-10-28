@@ -17,7 +17,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project --no-dev --no-editable --all-extras
 
 ADD src /app/src
-ADD main.py /app/main.py
 ADD pyproject.toml /app/pyproject.toml
 
 # Copy the lock file to make sure the Docker environment has the same 
@@ -40,5 +39,3 @@ COPY --from=builder --chown=app:app /app /app
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
-
-# CMD ["python", "main.py"]
