@@ -377,9 +377,10 @@ class Trainer:
             logger.debug(f"Predictions type: {type(pred.predictions)}")
 
         labels_ids = pred.label_ids
-        labels_ids[labels_ids == self.processor.tokenizer.pad_token_id] = -100
+        labels_ids[labels_ids == -100] = self.processor.tokenizer.pad_token_id
 
         pred_logits = pred.predictions
+        pred_logits[pred_logits == -100] = self.processor.tokenizer.pad_token_id
         if hasattr(pred_logits, "shape") and len(pred_logits.shape) == 3:
             pred_ids = pred_logits.argmax(-1)
         else:
