@@ -1,7 +1,8 @@
 # package-training
 
 Python package for TrOCR training
-If you have a line based preprocessed dataset, you can train a handwritten text recognition TrOCR model with this package.
+If you have a line based preprocessed dataset, you can train a handwritten text recognition TrOCR model with this
+package.
 
 ## Template Features
 
@@ -22,7 +23,8 @@ If you have a line based preprocessed dataset, you can train a handwritten text 
 
 ## Usage
 
-The template is based on [UV](https://docs.astral.sh/) as package manager and [Just](https://github.com/casey/just) as command runner. You need to have both installed in your system to use this template.
+The template is based on [UV](https://docs.astral.sh/) as package manager and [Just](https://github.com/casey/just) as
+command runner. You need to have both installed in your system to use this template.
 
 Once you have those, you can just run
 
@@ -30,13 +32,15 @@ Once you have those, you can just run
 just dev-sync
 ```
 
-to create a virtual environment and install all the dependencies, including the development ones. If instead you want to build a "production-like" environment, you can run
+to create a virtual environment and install all the dependencies, including the development ones. If instead you want to
+build a "production-like" environment, you can run
 
 ```bash
 just prod-sync
 ```
 
-In both cases, all extra dependencies will be installed (notice that the current pyproject.toml file has no extra dependencies).
+In both cases, all extra dependencies will be installed (notice that the current pyproject.toml file has no extra
+dependencies).
 
 You also need to install the pre-commit hooks with:
 
@@ -82,7 +86,8 @@ just run
 
 ### Docker
 
-The template includes a multi stage Dockerfile, which produces an image with the code and the dependencies installed. You can build the image with:
+The template includes a multi stage Dockerfile, which produces an image with the code and the dependencies installed.
+You can build the image with:
 
 ```bash
 just dockerize
@@ -92,6 +97,8 @@ just dockerize
 
 There are two Github Actions workflows from the template.
 
-The first one runs tests and linters on every push on the main and dev branches. You can find the workflow file in `.github/workflows/main-list-test.yml`.
+The first one runs tests and linters on every push on the main and dev branches. You can find the workflow file in
+`.github/workflows/main-list-test.yml`.
 
-The second one is triggered on every tag push and can also be triggered manually. It builds the distribution and uploads it to PyPI. You can find the workflow file in `.github/workflows/publish.yaml`.
+The second one is triggered on every tag push and can also be triggered manually. It builds the distribution and uploads
+it to PyPI. You can find the workflow file in `.github/workflows/publish.yaml`.
