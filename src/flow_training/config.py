@@ -128,9 +128,7 @@ class TrainingConfig:
             raise ValueError(f"SAVE_TOTAL_LIMIT must be positive, got {self.SAVE_TOTAL_LIMIT}")
 
         if not (0 <= self.WARMUP_RATIO <= 1):
-            raise ValueError(
-                f"WARMUP_RATIO must be between 0 and 1, got {self.WARMUP_RATIO}"
-            )
+            raise ValueError(f"WARMUP_RATIO must be between 0 and 1, got {self.WARMUP_RATIO}")
 
         if self.SEED < 0:
             raise ValueError(f"SEED must be non-negative, got {self.SEED}")
@@ -169,9 +167,7 @@ class TrainingConfig:
             raise ValueError("Cannot use both FP16 and BF16 at the same time")
 
         if not self.DO_TRAIN and not self.DO_EVAL and not self.DO_PREDICT:
-            raise ValueError(
-                "At least one of DO_TRAIN, DO_EVAL, or DO_PREDICT must be True"
-            )
+            raise ValueError("At least one of DO_TRAIN, DO_EVAL, or DO_PREDICT must be True")
 
         if self.AUTO_FIND_BATCH_SIZE and self.BATCH_SIZE != 16:
             import warnings
@@ -219,9 +215,7 @@ class DatasetConfig:
             )
 
         if self.MIN_LINE_HEIGHT <= 0:
-            raise ValueError(
-                f"MIN_LINE_HEIGHT must be positive, got {self.MIN_LINE_HEIGHT}"
-            )
+            raise ValueError(f"MIN_LINE_HEIGHT must be positive, got {self.MIN_LINE_HEIGHT}")
 
         if not self.HUGGINGFACE_DATASET_SOURCE:
             raise ValueError("HUGGINGFACE_DATASET_SOURCE cannot be empty")

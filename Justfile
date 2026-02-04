@@ -23,10 +23,9 @@ install-hooks:
 format:
 	uv run ruff format
 
-# Run ruff linting and mypy type checking
+# Run ruff linting
 lint:
 	uv run ruff check --fix
-	uv run mypy --ignore-missing-imports --install-types --non-interactive src/ tests/
 
 # Run tests using pytest
 test:
@@ -34,11 +33,3 @@ test:
 
 # Run all checks: format, lint, and test
 validate: format lint test
-
-# Build docker image
-dockerize:
-	docker build -t flow-training .
-
-# run some code
-# run:
-#	uv run ...

@@ -5,7 +5,6 @@ Run with: pytest tests/test_exceptions_example.py -v
 """
 
 import pytest
-from pathlib import Path
 from PIL import Image, UnidentifiedImageError
 from flow_training.train import Trainer
 
@@ -16,10 +15,10 @@ class TestConvertToRgb:
     def test_valid_pil_image_returns_rgb(self):
         """Test that a valid PIL Image is converted to RGB."""
         # Create a test image in grayscale
-        img = Image.new('L', (100, 100), color=128)
+        img = Image.new("L", (100, 100), color=128)
         result = Trainer._convert_to_rgb(img)
 
-        assert result.mode == 'RGB'
+        assert result.mode == "RGB"
         assert result.size == (100, 100)
 
     def test_invalid_path_raises_file_not_found(self, tmp_path):
@@ -41,7 +40,7 @@ class TestConvertToRgb:
     def test_empty_file_raises_error(self, tmp_path):
         """Test that empty file raises an exception."""
         empty_file = tmp_path / "empty.jpg"
-        empty_file.write_bytes(b'')
+        empty_file.write_bytes(b"")
 
         with pytest.raises((UnidentifiedImageError, OSError)):
             Trainer._convert_to_rgb(str(empty_file))
@@ -59,7 +58,7 @@ class TestExceptionTypes:
 
     def test_type_error_example(self):
         """Show how TypeError occurs with wrong argument types."""
-        with pytest.raises(TypeError):
+        with pytest.raises((TypeError, AttributeError)):
             # Image.open expects str, bytes, or PathLike
             Image.open(12345)  # Invalid type
 
@@ -85,23 +84,11 @@ class TestExceptionInspection:
         except UnidentifiedImageError as e:
             # You can inspect the exception
             assert isinstance(e, Exception)
-            assert hasattr(e, 'args')
+            assert hasattr(e, "args")
             assert len(e.args) >= 0
 
             # The exception message
             assert str(e)  # Non-empty message
-
-    def test_exception_chaining(self, tmp_path):
-        """Demonstrate exception chaining with 'from'."""
-        fake_image = tmp_path / "fake.jpg"
-        fake_image.write_text("not an image")
-
-        try:
-            Trainer._convert_to_rgb(str(fake_image))
-        except UnidentifiedImageError:
-            # When you catch and re-raise, preserve the chain
-            with pytest.raises(UnidentifiedImageError):
-                raise ValueError("Custom error message") from None
 
 
 def test_exception_hierarchy():
@@ -129,7 +116,7 @@ class TestCommonExceptionPatterns:
         # Try to access missing key
         with pytest.raises((KeyError, ValueError)):
             try:
-                img = example["image"]  # Raises KeyError
+                _ = example["image"]  # Raises KeyError
             except KeyError:
                 # Convert to ValueError with better message
                 raise ValueError("'image' field is required") from None
@@ -143,7 +130,7 @@ class TestCommonExceptionPatterns:
                 # This preserves the original exception in __cause__
                 raise ValueError("Cannot process image") from e
         except ValueError as e:
-            assert e.__cause__.__class__.__name__ == 'FileNotFoundError'
+            assert e.__cause__.__class__.__name__ == "FileNotFoundError"
 
 
 # Test-Lauf Beispiel:

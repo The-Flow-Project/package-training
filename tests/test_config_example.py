@@ -149,13 +149,14 @@ class TestReportingConfigValidation:
         monkeypatch.delenv("SWANLAB_PROJ_NAME", raising=False)
         monkeypatch.delenv("SWANLAB_WORKSPACE", raising=False)
 
-        config = ReportingConfig(
+        _ = ReportingConfig(
             REPORT_TO=ReportingType.SWANLAB,
             REPORT_PROJECTNAME="TestProject",
-            PROJECT_WORKSPACE="TestWorkspace"
+            PROJECT_WORKSPACE="TestWorkspace",
         )
 
         import os
+
         assert os.environ.get("SWANLAB_PROJ_NAME") == "TestProject"
         assert os.environ.get("SWANLAB_WORKSPACE") == "TestWorkspace"
 
@@ -169,7 +170,7 @@ class TestIntegration:
             EPOCHS=10,
             LOGGING_STRATEGY=LoggingStrategy.STEPS,
             EVAL_STRATEGY=EvalStrategy.STEPS,
-            SAVE_STRATEGY=SaveStrategy.BEST
+            SAVE_STRATEGY=SaveStrategy.BEST,
         )
         dataset_config = DatasetConfig()
         reporting_config = ReportingConfig(REPORT_TO=ReportingType.SWANLAB)
@@ -181,8 +182,4 @@ class TestIntegration:
     def test_invalid_combination(self):
         """Test that invalid combinations are caught."""
         with pytest.raises(ValueError):
-            TrainingConfig(
-                EPOCHS=10,
-                FP16=True,
-                BF16=True
-            )
+            TrainingConfig(EPOCHS=10, FP16=True, BF16=True)

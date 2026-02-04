@@ -6,6 +6,8 @@ Input: Preprocessed Dataset from Huggingface Datasets containing line images and
 Output: Fine-tuned TrOCR Model saved to specified directory or uploaded to Huggingface Hub.
 """
 
+from __future__ import annotations
+
 import os
 import shutil
 from loguru import logger
@@ -42,11 +44,11 @@ class Trainer:
     """
 
     def __init__(
-            self,
-            training_config: TrainingConfig,
-            dataset_config: DatasetConfig,
-            model_config: ModelConfig | None = None,
-            reporting_config: ReportingConfig | None = None,
+        self,
+        training_config: TrainingConfig,
+        dataset_config: DatasetConfig,
+        model_config: ModelConfig | None = None,
+        reporting_config: ReportingConfig | None = None,
     ):
         """
         Initialize the Trainer with dataset and configuration.
@@ -123,9 +125,7 @@ class Trainer:
         Loads model and processor from Hugging Face Hub, moves model to appropriate device
         (GPU or CPU), and configures floating point settings.
         """
-        self.processor = self.TrOCRProcessor.from_pretrained(
-            self.model_config.BASE_PROCESSOR_NAME
-        )
+        self.processor = self.TrOCRProcessor.from_pretrained(self.model_config.BASE_PROCESSOR_NAME)
         self.model = self.VisionEncoderDecoderModel.from_pretrained(
             self.model_config.BASE_MODEL_NAME
         )
@@ -145,7 +145,7 @@ class Trainer:
         """
         # Prepare output directory
         if self.training_config.OVERWRITE_OUTPUT_DIR and os.path.exists(
-                self.training_config.OUTPUT_DIR
+            self.training_config.OUTPUT_DIR
         ):
             shutil.rmtree(self.training_config.OUTPUT_DIR)
             logger.debug(f"Output directory removed: {self.training_config.OUTPUT_DIR}")
@@ -256,7 +256,7 @@ class Trainer:
         except KeyboardInterrupt:
             logger.warning("Training interrupted by user")
             raise
-        except torch.cuda.OutOfMemoryError as e:
+        except self.torch.cuda.OutOfMemoryError as e:
             logger.error(f"GPU out of memory: {e}")
             raise RuntimeError("Not enough GPU memory for training") from e
         except Exception as e:
@@ -501,49 +501,39 @@ class Trainer:
         training_args = Seq2SeqTrainingArguments(
             output_dir=self.training_config.OUTPUT_DIR,
             seed=self.training_config.SEED,
-
             do_train=self.training_config.DO_TRAIN,
             do_eval=self.training_config.DO_EVAL,
             do_predict=self.training_config.DO_PREDICT,
-
             auto_find_batch_size=self.training_config.AUTO_FIND_BATCH_SIZE,
             per_device_train_batch_size=self.training_config.BATCH_SIZE,
             per_device_eval_batch_size=self.training_config.BATCH_SIZE,
-
             learning_rate=self.training_config.LEARNING_RATE,
             lr_scheduler_type=self.training_config.LR_SCHEDULER_TYPE,
             weight_decay=self.training_config.WEIGHT_DECAY,
             num_train_epochs=self.training_config.EPOCHS,
-
             tf32=self.training_config.TF32,
             fp16=self.training_config.FP16,
             bf16=self.training_config.BF16,
-
             eval_strategy=self.training_config.EVAL_STRATEGY,
             eval_steps=self.training_config.EVAL_STEPS,
             eval_accumulation_steps=self.training_config.EVAL_ACCUMULATION_STEPS,
-
             save_strategy=self.training_config.SAVE_STRATEGY,
             save_steps=self.training_config.SAVE_STEPS,
             save_total_limit=self.training_config.SAVE_TOTAL_LIMIT,
-
             logging_strategy=self.training_config.LOGGING_STRATEGY,
             logging_dir=self.training_config.LOGGING_DIR,
             logging_first_step=self.training_config.LOGGING_FIRST_STEP,
             logging_steps=self.training_config.LOGGING_STEPS,
-
             gradient_accumulation_steps=self.training_config.GRADIENT_ACCUMULATION_STEPS,
             generation_num_beams=self.training_config.GENERATION_NUM_BEAMS,
             generation_max_length=self.max_seq_length,
             gradient_checkpointing=self.training_config.GRADIENT_CHECKPOINTING,
-
             disable_tqdm=self.training_config.DISABLE_TQDM,
             warmup_ratio=self.training_config.WARMUP_RATIO,
             predict_with_generate=self.training_config.PREDICT_WITH_GENERATE,
             load_best_model_at_end=self.training_config.LOAD_BEST_MODEL_AT_END,
             metric_for_best_model=self.training_config.METRIC_FOR_BEST_MODEL,
             greater_is_better=self.training_config.GREATER_IS_BETTER,
-
             report_to=self.reporting_config.REPORT_TO,
             run_name=self.training_config.RUN_NAME,
         )

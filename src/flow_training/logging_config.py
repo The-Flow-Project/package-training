@@ -18,9 +18,9 @@ LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 
 def setup_logger(
-        level: LogLevel = "DEBUG",
-        log_dir: Path | str | None = None,
-        in_production: bool = False,
+    level: LogLevel = "DEBUG",
+    log_dir: Path | str | None = None,
+    in_production: bool = False,
 ) -> None:
     """
     Configure the Loguru logger for the application.
@@ -41,9 +41,7 @@ def setup_logger(
     # Validate log level
     valid_levels: set[LogLevel] = {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}
     if level not in valid_levels:  # type: ignore
-        raise ValueError(
-            f"Invalid log level '{level}'. Must be one of {sorted(valid_levels)}"
-        )
+        raise ValueError(f"Invalid log level '{level}'. Must be one of {sorted(valid_levels)}")
 
     # Set up log directory
     if log_dir is None:
@@ -84,10 +82,7 @@ def setup_logger(
 
     # File handler for all logs with rotation and retention
     file_format = (
-        "{time:YYYY-MM-DD HH:mm:ss.SSS} | "
-        "{level: <8} | "
-        "{name}:{function}:{line} - "
-        "{message}"
+        "{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}"
     )
 
     logger.add(
