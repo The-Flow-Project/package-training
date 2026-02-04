@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "flow_training"
-version = "0.0.1"
+dynamic = ["version"]
 description = "TrOCR Training Package for the Flow Project (flow-project.net)"
 readme = { file = "README.md", content-type = "text/markdown" }
 license = { text = "MIT" }
@@ -34,7 +34,18 @@ keywords = [
 
 requires-python = ">=3.12"
 dependencies = [
+    "accelerate>=1.12.0",
+    "datasets>=4.5.0",
+    "evaluate>=0.4.6",
+    "jiwer>=4.0.0",
     "loguru>=0.7.3",
+    "numpy>=2.4.1",
+    "pillow>=12.1.0",
+    "swanboard>=0.1.6",
+    "swanlab>=0.7.7",
+    "torch>=2.10.0",
+    "torchvision>=0.25.0",
+    "transformers>=4.57.6",
 ]
 
 [dependency-groups]
@@ -48,3 +59,6 @@ dev = [
 [project.urls]
 Homepage = "https://flow-project.net"
 Repository = "https://github.com/The-Flow-Project/package-training"
+
+[tool.setuptools.dynamic]
+version = { attr = "flow_training.__version__.__version__" }
