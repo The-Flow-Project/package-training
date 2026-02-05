@@ -60,4 +60,4 @@ Homepage = "https://flow-project.net"
 Repository = "https://github.com/The-Flow-Project/package-training"
 
 [tool.setuptools.dynamic]
-version = { attr = "flow_training.__version__.__version__" }
+version = { attr = "flow_training.__version__" }

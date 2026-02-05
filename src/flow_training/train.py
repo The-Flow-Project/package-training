@@ -44,11 +44,11 @@ class Trainer:
     """
 
     def __init__(
-        self,
-        training_config: TrainingConfig,
-        dataset_config: DatasetConfig,
-        model_config: ModelConfig | None = None,
-        reporting_config: ReportingConfig | None = None,
+            self,
+            training_config: TrainingConfig,
+            dataset_config: DatasetConfig,
+            model_config: ModelConfig | None = None,
+            reporting_config: ReportingConfig | None = None,
     ):
         """
         Initialize the Trainer with dataset and configuration.
@@ -145,7 +145,7 @@ class Trainer:
         """
         # Prepare output directory
         if self.training_config.OVERWRITE_OUTPUT_DIR and os.path.exists(
-            self.training_config.OUTPUT_DIR
+                self.training_config.OUTPUT_DIR
         ):
             shutil.rmtree(self.training_config.OUTPUT_DIR)
             logger.debug(f"Output directory removed: {self.training_config.OUTPUT_DIR}")

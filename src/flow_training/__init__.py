@@ -11,10 +11,13 @@ from .config import (
     ReportingConfig,
 )
 
+__version__ = "0.1.1"
+
 __all__ = [
     "Trainer",
     "TrainingConfig",
     "DatasetConfig",
     "ModelConfig",
     "ReportingConfig",
+    "__version__",
 ]
