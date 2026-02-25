@@ -85,7 +85,7 @@ class TestDatasetConfigValidation:
 
     def test_valid_config(self):
         """Test creation of valid DatasetConfig."""
-        config = DatasetConfig()
+        config = DatasetConfig(HUGGINGFACE_DATASET_SOURCE="my_dataset")
         assert config.EVAL_SPLIT_RATIO == 0.1
         assert config.MIN_LINE_HEIGHT == 1
 
@@ -116,7 +116,10 @@ class TestDatasetConfigValidation:
     def test_eval_split_name_cannot_be_empty(self):
         """Test that HUGGINGFACE_EVAL_SPLIT_NAME cannot be empty."""
         with pytest.raises(ValueError, match="HUGGINGFACE_EVAL_SPLIT_NAME cannot be empty"):
-            DatasetConfig(HUGGINGFACE_EVAL_SPLIT_NAME="")
+            DatasetConfig(
+                HUGGINGFACE_DATASET_SOURCE="my_dataset",
+                HUGGINGFACE_EVAL_SPLIT_NAME="",
+            )
 
 
 class TestReportingConfigValidation:
@@ -172,7 +175,7 @@ class TestIntegration:
             EVAL_STRATEGY=EvalStrategy.STEPS,
             SAVE_STRATEGY=SaveStrategy.BEST,
         )
-        dataset_config = DatasetConfig()
+        dataset_config = DatasetConfig(HUGGINGFACE_DATASET_SOURCE="my_dataset")
         reporting_config = ReportingConfig(REPORT_TO=ReportingType.SWANLAB)
 
         assert training_config.EPOCHS == 10
