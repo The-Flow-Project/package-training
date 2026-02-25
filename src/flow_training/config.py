@@ -189,12 +189,13 @@ class DatasetConfig:
 
     Attributes:
         HUGGINGFACE_DATASET_SOURCE: HuggingFace Hub dataset identifier.
-        HUGGINGFACE_EVAL_SPLIT_NAME: Name of evaluation split if available in dataset.
-        EVAL_SPLIT_RATIO: Ratio for train/test split if no eval split provided.
+        Has to be a line based dataset with "image" and "text" fields.
+        HUGGINGFACE_EVAL_SPLIT_NAME: Name of evaluation split if available in dataset (e.g., "validation").
+        EVAL_SPLIT_RATIO: Ratio for train/test split if no eval split provided (must be between 0 and 1, default 0.1).
         MIN_LINE_HEIGHT: Minimum image height for filtering.
     """
 
-    HUGGINGFACE_DATASET_SOURCE: str = "dh-unibe/data-towerbooks-textlines"
+    HUGGINGFACE_DATASET_SOURCE: str | None = None
     HUGGINGFACE_EVAL_SPLIT_NAME: str = "validation"
     HUGGINGFACE_DATASET_OUTPUT: str = "output"
     HUGGINGFACE_OUTPUT_PRIVATE: bool = True
@@ -209,7 +210,7 @@ class DatasetConfig:
         Raises:
             ValueError: If any parameter is invalid.
         """
-        if not (0 < self.EVAL_SPLIT_RATIO < 1):
+        if not (0.0 < self.EVAL_SPLIT_RATIO < 1.0):
             raise ValueError(
                 f"EVAL_SPLIT_RATIO must be between 0 and 1, got {self.EVAL_SPLIT_RATIO}"
             )
@@ -228,6 +229,14 @@ class DatasetConfig:
 class ModelConfig:
     """
     Configuration parameters for the TrOCR basemodel and processor.
+
+    Attributes:
+        BASE_MODEL_NAME: HuggingFace model identifier for the base TrOCR model.
+        BASE_PROCESSOR_NAME: HuggingFace model identifier for the base TrOCR processor.
+
+        Note:
+        The default values are set to "microsoft/trocr-large-handwritten"
+        which is a large TrOCR model fine-tuned on handwritten text.
     """
 
     BASE_MODEL_NAME: str = "microsoft/trocr-large-handwritten"
