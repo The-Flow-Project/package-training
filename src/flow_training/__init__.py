@@ -16,7 +16,7 @@ from .logging_config import setup_logger
 
 setup_logger()
 
-__version__ = "0.2.0"
+__version__ = "0.2.1"
 __license__ = "MIT"
 
 __all__ = [
@@ -25,6 +25,6 @@ __all__ = [
     "DatasetConfig",
     "ModelConfig",
     "ReportingConfig",
-    "ModelCardConfig"
+    "ModelCardConfig",
     "__version__",
 ]
