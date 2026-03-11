@@ -113,14 +113,6 @@ class TestDatasetConfigValidation:
         with pytest.raises(ValueError, match="HUGGINGFACE_DATASET_SOURCE cannot be empty"):
             DatasetConfig(HUGGINGFACE_DATASET_SOURCE="")
 
-    def test_eval_split_name_cannot_be_empty(self):
-        """Test that HUGGINGFACE_EVAL_SPLIT_NAME cannot be empty."""
-        with pytest.raises(ValueError, match="HUGGINGFACE_EVAL_SPLIT_NAME cannot be empty"):
-            DatasetConfig(
-                HUGGINGFACE_DATASET_SOURCE="my_dataset",
-                HUGGINGFACE_EVAL_SPLIT_NAME="",
-            )
-
 
 class TestReportingConfigValidation:
     """Test ReportingConfig validation."""
@@ -128,24 +120,36 @@ class TestReportingConfigValidation:
     def test_valid_config(self):
         """Test creation of valid ReportingConfig."""
         config = ReportingConfig()
-        assert config.REPORT_TO == ReportingType.SWANLAB
+        assert config.REPORT_TO == ReportingType.SWANLAB.value
         assert config.REPORT_PROJECTNAME == "TrOCR_Training_Project"
 
     def test_project_name_cannot_be_empty(self):
         """Test that REPORT_PROJECTNAME cannot be empty."""
-        with pytest.raises(ValueError, match="REPORT_PROJECTNAME cannot be empty"):
+        with pytest.raises(ValueError, match="REPORT_PROJECTNAME cannot be empty when REPORT_TO is set"):
             ReportingConfig(REPORT_PROJECTNAME="")
+
+    def test_project_name_can_be_empty_when_no_reporting(self):
+        """Test that REPORT_PROJECTNAME can be empty when REPORT_TO is none."""
+        config = ReportingConfig(REPORT_TO=ReportingType.NONE.value, REPORT_PROJECTNAME="")
+        assert config.REPORT_TO == ReportingType.NONE.value
+        assert config.REPORT_PROJECTNAME == ""
 
     def test_workspace_cannot_be_empty(self):
         """Test that PROJECT_WORKSPACE cannot be empty."""
-        with pytest.raises(ValueError, match="PROJECT_WORKSPACE cannot be empty"):
+        with pytest.raises(ValueError, match="PROJECT_WORKSPACE cannot be empty when REPORT_TO is set"):
             ReportingConfig(PROJECT_WORKSPACE="")
+
+    def test_workspace_can_be_empty_when_no_reporting(self):
+        """Test that PROJECT_WORKSPACE can be empty when REPORT_TO is none."""
+        config = ReportingConfig(REPORT_TO=ReportingType.NONE.value, PROJECT_WORKSPACE="")
+        assert config.REPORT_TO == ReportingType.NONE.value
+        assert config.PROJECT_WORKSPACE == ""
 
     def test_enum_type_for_report_to(self):
         """Test that REPORT_TO uses enum type."""
-        config = ReportingConfig(REPORT_TO=ReportingType.WANDB)
-        assert config.REPORT_TO == ReportingType.WANDB
-        assert config.REPORT_TO.value == "wandb"
+        config = ReportingConfig(REPORT_TO=ReportingType.WANDB.value)
+        assert config.REPORT_TO == ReportingType.WANDB.value
+        assert config.REPORT_TO == "wandb"
 
     def test_swanlab_env_vars_set(self, monkeypatch):
         """Test that environment variables are set for swanlab."""
@@ -153,7 +157,7 @@ class TestReportingConfigValidation:
         monkeypatch.delenv("SWANLAB_WORKSPACE", raising=False)
 
         _ = ReportingConfig(
-            REPORT_TO=ReportingType.SWANLAB,
+            REPORT_TO=ReportingType.SWANLAB.value,
             REPORT_PROJECTNAME="TestProject",
             PROJECT_WORKSPACE="TestWorkspace",
         )
@@ -176,11 +180,11 @@ class TestIntegration:
             SAVE_STRATEGY=SaveStrategy.BEST,
         )
         dataset_config = DatasetConfig(HUGGINGFACE_DATASET_SOURCE="my_dataset")
-        reporting_config = ReportingConfig(REPORT_TO=ReportingType.SWANLAB)
+        reporting_config = ReportingConfig(REPORT_TO=ReportingType.SWANLAB.value)
 
         assert training_config.EPOCHS == 10
         assert dataset_config.EVAL_SPLIT_RATIO == 0.1
-        assert reporting_config.REPORT_TO == ReportingType.SWANLAB
+        assert reporting_config.REPORT_TO == ReportingType.SWANLAB.value
 
     def test_invalid_combination(self):
         """Test that invalid combinations are caught."""

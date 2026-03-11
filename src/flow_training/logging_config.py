@@ -18,9 +18,9 @@ LogLevel = Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 
 def setup_logger(
-    level: LogLevel = "DEBUG",
-    log_dir: Path | str | None = None,
-    in_production: bool = False,
+        level: LogLevel = "DEBUG",
+        log_dir: Path | str | None = None,
+        in_production: bool = False,
 ) -> None:
     """
     Configure the Loguru logger for the application.

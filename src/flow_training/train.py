@@ -14,14 +14,15 @@ from loguru import logger
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from PIL import Image, UnidentifiedImageError
+import io
 
-from flow_training.logging_config import setup_logger
 from flow_training.utils import seed_everything, TrOCRDataCollator
 from flow_training.config import (
     TrainingConfig,
     DatasetConfig,
     ModelConfig,
     ReportingConfig,
+    ModelCardConfig,
 )
 from flow_training.enums import ReportingType
 
@@ -29,8 +30,6 @@ from flow_training.enums import ReportingType
 if TYPE_CHECKING:
     from transformers import Seq2SeqTrainer, Seq2SeqTrainingArguments, GenerationConfig
     from transformers.trainer_utils import EvalPrediction
-
-setup_logger()  # default to DEBUG level
 
 
 # ===============================================================================
@@ -49,6 +48,7 @@ class Trainer:
             dataset_config: DatasetConfig,
             model_config: ModelConfig | None = None,
             reporting_config: ReportingConfig | None = None,
+            model_card: ModelCardConfig | None = None,
     ):
         """
         Initialize the Trainer with dataset and configuration.
@@ -79,6 +79,7 @@ class Trainer:
         self.reporting_config: ReportingConfig = (
             reporting_config if reporting_config is not None else ReportingConfig()
         )
+        self.model_card: ModelCardConfig = model_card if model_card is not None else None
 
         # Lazy-load these for later use
         self.torch = torch
@@ -95,6 +96,7 @@ class Trainer:
         self._load_model_and_processor()
         self._prepare_and_preprocess_datasets()
         self._initialize_trainer()
+        self._initialize_model_card()
 
     def _initialize_configs(self) -> None:
         """
@@ -105,6 +107,29 @@ class Trainer:
         if self.reporting_config.REPORT_TO == ReportingType.SWANLAB:
             self._init_swanlab()
         logger.info("Initialized Trainer with provided configurations.")
+
+    def _initialize_model_card(self) -> None:
+        """
+        Initialize model card for Hugging Face Hub.
+
+        If a ModelCardConfig is provided, this method creates a model card with the specified
+        metadata and saves it to the output directory. This allows for better documentation
+        and presentation when uploading the model to Hugging Face Hub.
+
+        Raises:
+            OSError: If saving the model card fails.
+        """
+        self.model_card_dict = None
+        if self.model_card:
+            self.model_card_dict = {
+                "model_name": self.model_card.MODEL_CARD_NAME,
+                "language": self.model_card.MODEL_CARD_LANGUAGE,
+                "license": self.model_card.MODEL_CARD_LICENSE,
+                "tags": self.model_card.MODEL_CARD_TAGS,
+                "dataset": self.dataset_config.HUGGINGFACE_DATASET_SOURCE,
+                "finetuned_from": self.model_config.BASE_MODEL_NAME,
+                "tasks": self.model_card.MODEL_CARD_TASKS,
+            }
 
     def _setup_environment(self) -> None:
         """
@@ -125,9 +150,14 @@ class Trainer:
         Loads model and processor from Hugging Face Hub, moves model to appropriate device
         (GPU or CPU), and configures floating point settings.
         """
-        self.processor = self.TrOCRProcessor.from_pretrained(self.model_config.BASE_PROCESSOR_NAME)
+        huggingface_token = self.training_config.HUGGINGFACE_TOKEN
+        self.processor = self.TrOCRProcessor.from_pretrained(
+            self.model_config.BASE_PROCESSOR_NAME,
+            token=huggingface_token,
+        )
         self.model = self.VisionEncoderDecoderModel.from_pretrained(
-            self.model_config.BASE_MODEL_NAME
+            self.model_config.BASE_MODEL_NAME,
+            token=huggingface_token,
         )
         logger.info(f"Loaded model and processor from {self.model_config.BASE_MODEL_NAME}")
 
@@ -264,11 +294,17 @@ class Trainer:
             raise
 
         try:
-            self.processor.save_pretrained(self.training_config.OUTPUT_DIR)
-            self.model.save_pretrained(self.training_config.OUTPUT_DIR)
-            logger.info(
-                f"Training completed. Model and processor saved to {self.training_config.OUTPUT_DIR}."
-            )
+            if self.training_config.OUTPUT_DIR:
+                self.processor.save_pretrained(self.training_config.OUTPUT_DIR)
+                self.model.save_pretrained(self.training_config.OUTPUT_DIR)
+                logger.info(
+                    f"Training completed. Model and processor saved to {self.training_config.OUTPUT_DIR}."
+                )
+            if self.model_card_dict:
+                self.trainer.create_model_card(**self.model_card_dict)
+                logger.info(
+                    f"Model card created with metadata: {self.model_card_dict}"
+                )
         except OSError as e:
             logger.error(f"Failed to save model: {e}")
             raise
@@ -359,9 +395,15 @@ class Trainer:
             if hasattr(img, "convert"):
                 # It's already a PIL Image
                 return img.convert("RGB")
-            else:
-                # Assume it's a file path
+            elif hasattr(img, "path"):
+                # Assume it's a HuggingFace Image object with a 'path' attribute
+                return Image.open(img["path"]).convert("RGB")
+            elif isinstance(img, (str, Path)):
+                # It's a string or Path, treat as file path
                 return Image.open(img).convert("RGB")
+            else:
+                # Image as bytes
+                return Image.open(io.BytesIO(img["bytes"])).convert("RGB")
         except FileNotFoundError as e:
             logger.error(f"Image file not found: {img} - {e}")
             raise
@@ -406,8 +448,12 @@ class Trainer:
         """
         from datasets import load_dataset, get_dataset_split_names
 
+        huggingface_token = self.training_config.HUGGINGFACE_TOKEN
+
         self.train_dataset = load_dataset(
-            self.dataset_config.HUGGINGFACE_DATASET_SOURCE, split="train"
+            self.dataset_config.HUGGINGFACE_DATASET_SOURCE,
+            split="train",
+            token=huggingface_token,
         )
         self.train_dataset = self.train_dataset.filter(self._filter_by_height)
         split_names = get_dataset_split_names(self.dataset_config.HUGGINGFACE_DATASET_SOURCE)
@@ -416,6 +462,7 @@ class Trainer:
             self.eval_dataset = load_dataset(
                 self.dataset_config.HUGGINGFACE_DATASET_SOURCE,
                 split=self.dataset_config.HUGGINGFACE_EVAL_SPLIT_NAME,
+                token=huggingface_token,
             )
             self.eval_dataset = self.eval_dataset.filter(self._filter_by_height)
             logger.info(
@@ -508,19 +555,19 @@ class Trainer:
             per_device_train_batch_size=self.training_config.BATCH_SIZE,
             per_device_eval_batch_size=self.training_config.BATCH_SIZE,
             learning_rate=self.training_config.LEARNING_RATE,
-            lr_scheduler_type=self.training_config.LR_SCHEDULER_TYPE,
+            lr_scheduler_type=self.training_config.LR_SCHEDULER_TYPE.value,
             weight_decay=self.training_config.WEIGHT_DECAY,
             num_train_epochs=self.training_config.EPOCHS,
             tf32=self.training_config.TF32,
             fp16=self.training_config.FP16,
             bf16=self.training_config.BF16,
-            eval_strategy=self.training_config.EVAL_STRATEGY,
+            eval_strategy=self.training_config.EVAL_STRATEGY.value,
             eval_steps=self.training_config.EVAL_STEPS,
             eval_accumulation_steps=self.training_config.EVAL_ACCUMULATION_STEPS,
-            save_strategy=self.training_config.SAVE_STRATEGY,
+            save_strategy=self.training_config.SAVE_STRATEGY.value,
             save_steps=self.training_config.SAVE_STEPS,
             save_total_limit=self.training_config.SAVE_TOTAL_LIMIT,
-            logging_strategy=self.training_config.LOGGING_STRATEGY,
+            logging_strategy=self.training_config.LOGGING_STRATEGY.value,
             logging_dir=self.training_config.LOGGING_DIR,
             logging_first_step=self.training_config.LOGGING_FIRST_STEP,
             logging_steps=self.training_config.LOGGING_STEPS,
@@ -536,6 +583,10 @@ class Trainer:
             greater_is_better=self.training_config.GREATER_IS_BETTER,
             report_to=self.reporting_config.REPORT_TO,
             run_name=self.training_config.RUN_NAME,
+            push_to_hub=self.training_config.PUSH_TO_HUB,
+            hub_model_id=self.training_config.HUGGINGFACE_MODEL_ID,
+            hub_token=self.training_config.HUGGINGFACE_TOKEN,
+            hub_private_repo=self.training_config.HUGGINGFACE_REPO_PRIVATE,
         )
         logger.info(f"Created Seq2SeqTrainingArguments: {training_args}")
         return training_args

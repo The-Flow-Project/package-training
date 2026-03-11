@@ -9,9 +9,15 @@ from .config import (
     DatasetConfig,
     ModelConfig,
     ReportingConfig,
+    ModelCardConfig,
 )
 
+from .logging_config import setup_logger
+
+setup_logger()
+
 __version__ = "0.2.0"
+__license__ = "MIT"
 
 __all__ = [
     "Trainer",
@@ -19,5 +25,6 @@ __all__ = [
     "DatasetConfig",
     "ModelConfig",
     "ReportingConfig",
+    "ModelCardConfig"
     "__version__",
 ]

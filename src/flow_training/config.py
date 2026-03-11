@@ -3,6 +3,7 @@ Dataclasses for configuring the training parameters.
 """
 
 from dataclasses import dataclass, field
+from typing import List
 import os
 
 from flow_training.enums import (
@@ -30,8 +31,12 @@ class TrainingConfig:
     EPOCHS: int
 
     RUN_NAME: str = "TrOCR_Training_Run"
-    OUTPUT_DIR: str = "./trocr_finetuned_model"
+    OUTPUT_DIR: str | None = None
     OVERWRITE_OUTPUT_DIR: bool = False
+    PUSH_TO_HUB: bool = False
+    HUGGINGFACE_TOKEN: str | None = None
+    HUGGINGFACE_MODEL_ID: str | None = None
+    HUGGINGFACE_REPO_PRIVATE: bool = True
 
     DO_TRAIN: bool = True
     DO_EVAL: bool = True
@@ -71,7 +76,7 @@ class TrainingConfig:
 
     DISABLE_TQDM: bool = False
 
-    TF32: bool = True
+    TF32: bool = False
     FP16: bool = True
     BF16: bool = False
 
@@ -177,9 +182,19 @@ class TrainingConfig:
                 UserWarning,
             )
 
+        if self.OUTPUT_DIR is None and self.PUSH_TO_HUB is None:
+            raise ValueError("OUTPUT_DIR must be specified if PUSH_TO_HUB is False")
+
+        if self.PUSH_TO_HUB:
+            if self.HUGGINGFACE_MODEL_ID is None:
+                raise ValueError("HUGGINGFACE_MODEL_ID must be specified when PUSH_TO_HUB is True")
+            if self.HUGGINGFACE_TOKEN is None:
+                raise ValueError("HUGGINGFACE_TOKEN must be specified when PUSH_TO_HUB is True")
+
     def _setup_derived_params(self) -> None:
         """Set up derived parameters from configuration."""
-        self.LOGGING_DIR = os.path.join(self.OUTPUT_DIR, "logs")
+        path = self.OUTPUT_DIR or "./"
+        self.LOGGING_DIR = os.path.join(path, "logs")
 
 
 @dataclass
@@ -191,14 +206,13 @@ class DatasetConfig:
         HUGGINGFACE_DATASET_SOURCE: HuggingFace Hub dataset identifier.
         Has to be a line based dataset with "image" and "text" fields.
         HUGGINGFACE_EVAL_SPLIT_NAME: Name of evaluation split if available in dataset (e.g., "validation").
+        HUGGINGFACE_TOKEN: HuggingFace token for accessing private datasets (default None).
         EVAL_SPLIT_RATIO: Ratio for train/test split if no eval split provided (must be between 0 and 1, default 0.1).
         MIN_LINE_HEIGHT: Minimum image height for filtering.
     """
 
     HUGGINGFACE_DATASET_SOURCE: str | None = None
-    HUGGINGFACE_EVAL_SPLIT_NAME: str = "validation"
-    HUGGINGFACE_DATASET_OUTPUT: str = "output"
-    HUGGINGFACE_OUTPUT_PRIVATE: bool = True
+    HUGGINGFACE_EVAL_SPLIT_NAME: str | None = None
     HUGGINGFACE_TOKEN: str | None = None
     EVAL_SPLIT_RATIO: float = 0.1
     MIN_LINE_HEIGHT: int = 1
@@ -221,9 +235,6 @@ class DatasetConfig:
         if not self.HUGGINGFACE_DATASET_SOURCE:
             raise ValueError("HUGGINGFACE_DATASET_SOURCE cannot be empty")
 
-        if not self.HUGGINGFACE_EVAL_SPLIT_NAME:
-            raise ValueError("HUGGINGFACE_EVAL_SPLIT_NAME cannot be empty")
-
 
 @dataclass
 class ModelConfig:
@@ -240,8 +251,41 @@ class ModelConfig:
     """
 
     BASE_MODEL_NAME: str = "microsoft/trocr-large-handwritten"
-    BASE_PROCESSOR_NAME: str = "microsoft/trocr-large-handwritten"
+    BASE_PROCESSOR_NAME: str | None = "microsoft/trocr-large-handwritten"
 
+    def __post_init__(self) -> None:
+        """
+        Validate model configuration parameters.
+
+        Raises:
+            ValueError: If any parameter is invalid.
+        """
+        if not self.BASE_MODEL_NAME:
+            raise ValueError("BASE_MODEL_NAME cannot be empty")
+
+        if self.BASE_PROCESSOR_NAME is None and self.BASE_MODEL_NAME:
+            self.BASE_PROCESSOR_NAME = self.BASE_MODEL_NAME
+
+
+@dataclass
+class ModelCardConfig:
+    """
+    Configuration parameters for the model card metadata.
+
+    Attributes:
+        MODEL_CARD_NAME: Name of the model.
+        MODEL_CARD_LANGUAGE: Language of the model (e.g., "en" for English, default None).
+        MODEL_CARD_LICENSE: License information for the model card (e.g. MIT, default None).
+        MODEL_CARD_TAGS: List of tags to categorize the model
+        MODEL_CARD_FINETUNED_FROM: Optional field to specify the base model the fine-tuned model is derived from
+        MODEL_CARD_TASKS: Field to specify the tasks the model is fine-tuned for
+    """
+    MODEL_CARD_NAME: str = "TrOCR-HTR-Model"
+    MODEL_CARD_LANGUAGE: str | None = None
+    MODEL_CARD_LICENSE: str | None = None
+    MODEL_CARD_TAGS: List[str] | None = None
+    MODEL_CARD_FINETUNED_FROM: str | None = None
+    MODEL_CARD_TASKS: List[str] | None = field(default_factory=["handwritten-text-recognition", "text-generation"])
 
 @dataclass
 class ReportingConfig:
@@ -254,9 +298,9 @@ class ReportingConfig:
         PROJECT_WORKSPACE: Workspace/organization name for reporting.
     """
 
-    REPORT_TO: ReportingType = ReportingType.SWANLAB
-    REPORT_PROJECTNAME: str = "TrOCR_Training_Project"
-    PROJECT_WORKSPACE: str = "TrOCRTraining"
+    REPORT_TO: str = ReportingType.SWANLAB.value
+    REPORT_PROJECTNAME: str | None = "TrOCR_Training_Project"
+    PROJECT_WORKSPACE: str | None = "TrOCRTraining"
 
     def __post_init__(self) -> None:
         """
@@ -265,12 +309,13 @@ class ReportingConfig:
         Raises:
             ValueError: If any parameter is invalid.
         """
-        if not self.REPORT_PROJECTNAME:
-            raise ValueError("REPORT_PROJECTNAME cannot be empty")
+        if self.REPORT_TO != "none":
+            if not self.REPORT_PROJECTNAME:
+                raise ValueError("REPORT_PROJECTNAME cannot be empty when REPORT_TO is set")
 
-        if not self.PROJECT_WORKSPACE:
-            raise ValueError("PROJECT_WORKSPACE cannot be empty")
+            if not self.PROJECT_WORKSPACE:
+                raise ValueError("PROJECT_WORKSPACE cannot be empty when REPORT_TO is set")
 
-        if self.REPORT_TO == ReportingType.SWANLAB:
+        if self.REPORT_TO == ReportingType.SWANLAB.value:
             os.environ["SWANLAB_PROJ_NAME"] = self.REPORT_PROJECTNAME
             os.environ["SWANLAB_WORKSPACE"] = self.PROJECT_WORKSPACE
